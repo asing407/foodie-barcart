@@ -8,47 +8,63 @@ interface CartItem extends MenuItem {
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  total: number;
+  totalItems: number;
   addToCart: (item: MenuItem) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   toggleCart: () => void;
-  total: number;
-  totalItems: number;
 }
 
 export const useCart = create<CartStore>((set, get) => ({
   items: [],
   isOpen: false,
+  total: 0,
+  totalItems: 0,
   addToCart: (item: MenuItem) =>
     set((state) => {
       const existingItem = state.items.find((i) => i.id === item.id);
-      if (existingItem) {
-        return {
-          items: state.items.map((i) =>
+      const newItems = existingItem
+        ? state.items.map((i) =>
             i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-          ),
-        };
-      }
-      return { items: [...state.items, { ...item, quantity: 1 }] };
+          )
+        : [...state.items, { ...item, quantity: 1 }];
+      
+      const newTotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const newTotalItems = newItems.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return { 
+        items: newItems,
+        total: newTotal,
+        totalItems: newTotalItems
+      };
     }),
   removeFromCart: (id: string) =>
-    set((state) => ({
-      items: state.items.filter((i) => i.id !== id),
-    })),
+    set((state) => {
+      const newItems = state.items.filter((i) => i.id !== id);
+      const newTotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const newTotalItems = newItems.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return { 
+        items: newItems,
+        total: newTotal,
+        totalItems: newTotalItems
+      };
+    }),
   updateQuantity: (id: string, quantity: number) =>
-    set((state) => ({
-      items: quantity === 0
+    set((state) => {
+      const newItems = quantity === 0
         ? state.items.filter((i) => i.id !== id)
-        : state.items.map((i) => (i.id === id ? { ...i, quantity } : i)),
-    })),
+        : state.items.map((i) => (i.id === id ? { ...i, quantity } : i));
+      
+      const newTotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const newTotalItems = newItems.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return { 
+        items: newItems,
+        total: newTotal,
+        totalItems: newTotalItems
+      };
+    }),
   toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
-  total: 0,
-  totalItems: 0,
 }));
-
-// Calculate total and totalItems whenever items change
-useCart.subscribe((state) => {
-  const total = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
-  useCart.setState({ total, totalItems });
-});
