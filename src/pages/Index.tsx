@@ -3,14 +3,30 @@ import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { MenuSection } from "@/components/MenuSection";
 import { Cart } from "@/components/Cart";
-import { menuItems } from "@/data/menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { MenuItem } from "@/types";
+import { Loader2 } from "lucide-react";
+
+const fetchMenuItems = async (): Promise<MenuItem[]> => {
+  const { data, error } = await supabase
+    .from('menu_items')
+    .select('*')
+    .order('category');
+  
+  if (error) throw error;
+  return data;
+};
 
 const Index = () => {
-  const foodItems = menuItems.filter(item => item.category === "food");
-  const drinkItems = menuItems.filter(item => item.category === "drinks");
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const { data: menuItems, isLoading, error } = useQuery({
+    queryKey: ['menuItems'],
+    queryFn: fetchMenuItems,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -21,6 +37,25 @@ const Index = () => {
   if (!user) {
     return null;
   }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Error loading menu items. Please try again later.</p>
+      </div>
+    );
+  }
+
+  const foodItems = menuItems?.filter(item => item.category === "food") ?? [];
+  const drinkItems = menuItems?.filter(item => item.category === "drinks") ?? [];
 
   return (
     <div className="min-h-screen">
