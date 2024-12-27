@@ -1,11 +1,26 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { MenuSection } from "@/components/MenuSection";
 import { Cart } from "@/components/Cart";
 import { menuItems } from "@/data/menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const foodItems = menuItems.filter(item => item.category === "food");
   const drinkItems = menuItems.filter(item => item.category === "drinks");
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen">
