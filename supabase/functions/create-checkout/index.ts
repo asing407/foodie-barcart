@@ -14,9 +14,18 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    });
+
     const { cartItems } = await req.json();
     console.log('Received cart items:', cartItems);
     
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      throw new Error('Invalid cart items');
+    }
+
     // Get the user from the authorization header
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -80,12 +89,7 @@ serve(async (req) => {
       throw new Error('Failed to create order items');
     }
 
-    console.log('Order items created');
-
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    });
+    console.log('Order items created successfully');
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -110,7 +114,7 @@ serve(async (req) => {
       })),
     });
 
-    console.log('Stripe session created');
+    console.log('Stripe session created successfully');
 
     return new Response(
       JSON.stringify({ url: session.url }),
