@@ -8,12 +8,14 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { cartItems } = await req.json();
+    console.log('Received cart items:', cartItems);
     
     // Get the user from the authorization header
     const supabaseClient = createClient(
@@ -27,23 +29,34 @@ serve(async (req) => {
     );
 
     if (userError || !user) {
+      console.error('Auth error:', userError);
       throw new Error('Unauthorized');
     }
+
+    // Calculate total amount
+    const totalAmount = cartItems.reduce((sum: number, item: any) => 
+      sum + (item.price * item.quantity), 0
+    );
+
+    console.log('Creating order with total amount:', totalAmount);
 
     // Create a new order in the database
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .insert({
         user_id: user.id,
-        total_amount: cartItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0),
+        total_amount: totalAmount,
         status: 'pending'
       })
       .select()
       .single();
 
-    if (orderError || !order) {
+    if (orderError) {
+      console.error('Order creation error:', orderError);
       throw new Error('Failed to create order');
     }
+
+    console.log('Order created:', order);
 
     // Create order items
     const orderItems = cartItems.map((item: any) => ({
@@ -58,8 +71,16 @@ serve(async (req) => {
       .insert(orderItems);
 
     if (itemsError) {
+      console.error('Order items creation error:', itemsError);
+      // Cleanup the order if items creation fails
+      await supabaseClient
+        .from('orders')
+        .delete()
+        .match({ id: order.id });
       throw new Error('Failed to create order items');
     }
+
+    console.log('Order items created');
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -89,16 +110,26 @@ serve(async (req) => {
       })),
     });
 
+    console.log('Stripe session created');
+
     return new Response(
       JSON.stringify({ url: session.url }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        } 
+      }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in create-checkout:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
         status: 400,
       }
     );
