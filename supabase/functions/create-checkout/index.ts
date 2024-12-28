@@ -89,23 +89,6 @@ serve(async (req) => {
       })),
     });
 
-    // Send confirmation email
-    const emailResponse = await fetch(`${req.headers.get('origin')}/functions/v1/send-order-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader,
-      },
-      body: JSON.stringify({
-        orderId: order.id,
-        email: user.email,
-      }),
-    });
-
-    if (!emailResponse.ok) {
-      console.error('Failed to send confirmation email');
-    }
-
     return new Response(
       JSON.stringify({ url: session.url }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
