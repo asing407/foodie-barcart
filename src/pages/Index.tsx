@@ -16,7 +16,17 @@ const fetchMenuItems = async (): Promise<MenuItem[]> => {
     .order('category');
   
   if (error) throw error;
-  return data;
+  
+  // Validate and transform the data to ensure category is either "food" or "drinks"
+  return data.map(item => {
+    if (item.category !== "food" && item.category !== "drinks") {
+      throw new Error(`Invalid category: ${item.category}`);
+    }
+    return {
+      ...item,
+      category: item.category as "food" | "drinks"
+    };
+  });
 };
 
 const Index = () => {
