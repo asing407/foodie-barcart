@@ -9,6 +9,7 @@ import { useCart } from "@/hooks/useCart";
 import { X, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Cart = () => {
   const { isOpen, toggleCart, items, updateQuantity, removeFromCart, total } = useCart();
@@ -17,12 +18,46 @@ export const Cart = () => {
 
   const handleCheckout = async () => {
     setIsLoading(true);
-    // Implement Stripe checkout here
-    toast({
-      title: "Coming soon!",
-      description: "Stripe checkout will be implemented in the next version.",
-    });
-    setIsLoading(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Please log in",
+          description: "You need to be logged in to checkout",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch('/functions/v1/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          cartItems: items,
+        }),
+      });
+
+      const { url, error } = await response.json();
+      
+      if (error) {
+        throw new Error(error);
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create checkout session",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
