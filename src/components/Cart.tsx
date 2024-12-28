@@ -29,25 +29,19 @@ export const Cart = () => {
         return;
       }
 
-      const response = await fetch('/functions/v1/create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          cartItems: items,
-        }),
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { cartItems: items },
       });
-
-      const { url, error } = await response.json();
       
       if (error) {
-        throw new Error(error);
+        throw new Error(error.message);
       }
 
-      // Redirect to Stripe Checkout
-      window.location.href = url;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({
