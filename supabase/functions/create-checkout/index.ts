@@ -26,14 +26,21 @@ serve(async (req) => {
       throw new Error('Invalid cart items');
     }
 
-    // Get the user from the authorization header
-    const supabaseClient = createClient(
+    // Create Supabase client with service role key for admin access
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
+    // Get the user from the authorization header
     const authHeader = req.headers.get('Authorization')!;
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
@@ -49,8 +56,8 @@ serve(async (req) => {
 
     console.log('Creating order with total amount:', totalAmount);
 
-    // Create a new order in the database
-    const { data: order, error: orderError } = await supabaseClient
+    // Create a new order using admin client
+    const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
         user_id: user.id,
@@ -67,7 +74,7 @@ serve(async (req) => {
 
     console.log('Order created:', order);
 
-    // Create order items
+    // Create order items using admin client
     const orderItems = cartItems.map((item: any) => ({
       order_id: order.id,
       menu_item_id: item.id,
@@ -75,14 +82,14 @@ serve(async (req) => {
       price_at_time: item.price
     }));
 
-    const { error: itemsError } = await supabaseClient
+    const { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(orderItems);
 
     if (itemsError) {
       console.error('Order items creation error:', itemsError);
       // Cleanup the order if items creation fails
-      await supabaseClient
+      await supabaseAdmin
         .from('orders')
         .delete()
         .match({ id: order.id });
