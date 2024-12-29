@@ -93,50 +93,73 @@ serve(async (req) => {
 
     console.log('Order items created successfully');
 
+    // Verify Stripe secret key
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey?.startsWith('sk_test_')) {
+      console.error('Invalid Stripe secret key format');
+      throw new Error('Invalid Stripe configuration');
+    }
+
     // Initialize Stripe with the secret key
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    const stripe = new Stripe(stripeKey, {
       apiVersion: '2023-10-16',
       typescript: true,
     });
 
     console.log('Creating Stripe checkout session...');
 
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      success_url: `${req.headers.get('origin')}/success?order_id=${order.id}`,
-      cancel_url: `${req.headers.get('origin')}/?canceled=true`,
-      customer_email: user.email,
-      metadata: {
-        order_id: order.id,
-        user_id: user.id
-      },
-      line_items: cartItems.map((item: any) => ({
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: item.name,
-            images: [item.image],
-            description: item.description,
-          },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
+    const origin = req.headers.get('origin');
+    if (!origin) {
+      throw new Error('Origin header is required');
+    }
+
+    // Create Stripe checkout session with detailed error handling
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        success_url: `${origin}/success?order_id=${order.id}`,
+        cancel_url: `${origin}/?canceled=true`,
+        customer_email: user.email,
+        metadata: {
+          order_id: order.id,
+          user_id: user.id
         },
-        quantity: item.quantity,
-      })),
-    });
+        line_items: cartItems.map((item: any) => ({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.name,
+              images: [item.image],
+              description: item.description,
+            },
+            unit_amount: Math.round(item.price * 100), // Convert to cents
+          },
+          quantity: item.quantity,
+        })),
+      });
 
-    console.log('Stripe session created successfully:', session.id);
+      console.log('Stripe session created successfully:', session.id);
+      console.log('Checkout URL:', session.url);
 
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
-    );
+      return new Response(
+        JSON.stringify({ url: session.url }),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
+    } catch (stripeError) {
+      console.error('Stripe session creation error:', stripeError);
+      // Clean up the order since Stripe session creation failed
+      await supabaseAdmin
+        .from('orders')
+        .delete()
+        .match({ id: order.id });
+      throw new Error(`Stripe error: ${stripeError.message}`);
+    }
   } catch (error) {
     console.error('Error in create-checkout:', error);
     return new Response(
