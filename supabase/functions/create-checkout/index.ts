@@ -44,14 +44,14 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    console.log('Creating order for user:', user.id);
+
     // Calculate total amount
     const totalAmount = cartItems.reduce((sum: number, item: any) => 
       sum + (item.price * item.quantity), 0
     );
 
-    console.log('Creating order with total amount:', totalAmount);
-
-    // Create a new order using admin client
+    // Create a new order
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
@@ -69,7 +69,7 @@ serve(async (req) => {
 
     console.log('Order created:', order);
 
-    // Create order items using admin client
+    // Create order items
     const orderItems = cartItems.map((item: any) => ({
       order_id: order.id,
       menu_item_id: item.id,
@@ -96,7 +96,10 @@ serve(async (req) => {
     // Initialize Stripe with the secret key
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
+      typescript: true,
     });
+
+    console.log('Creating Stripe checkout session...');
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -106,7 +109,8 @@ serve(async (req) => {
       cancel_url: `${req.headers.get('origin')}/?canceled=true`,
       customer_email: user.email,
       metadata: {
-        order_id: order.id
+        order_id: order.id,
+        user_id: user.id
       },
       line_items: cartItems.map((item: any) => ({
         price_data: {
@@ -114,6 +118,7 @@ serve(async (req) => {
           product_data: {
             name: item.name,
             images: [item.image],
+            description: item.description,
           },
           unit_amount: Math.round(item.price * 100), // Convert to cents
         },
@@ -135,7 +140,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in create-checkout:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error instanceof Error ? error.stack : 'Unknown error'
+      }),
       { 
         headers: { 
           ...corsHeaders,
