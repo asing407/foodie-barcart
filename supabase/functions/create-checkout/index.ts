@@ -14,11 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    });
-
     const { cartItems } = await req.json();
     console.log('Received cart items:', cartItems);
     
@@ -98,6 +93,11 @@ serve(async (req) => {
 
     console.log('Order items created successfully');
 
+    // Initialize Stripe with the secret key
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    });
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -121,7 +121,7 @@ serve(async (req) => {
       })),
     });
 
-    console.log('Stripe session created successfully');
+    console.log('Stripe session created successfully:', session.id);
 
     return new Response(
       JSON.stringify({ url: session.url }),
