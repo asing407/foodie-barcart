@@ -33,7 +33,18 @@ const fetchOrders = async (): Promise<OrderWithItems[]> => {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return orders;
+  
+  // Transform the data to ensure correct typing
+  return orders.map(order => ({
+    ...order,
+    order_items: order.order_items.map(item => ({
+      ...item,
+      menu_item: {
+        ...item.menu_item,
+        category: item.menu_item.category as "food" | "drinks"
+      }
+    }))
+  }));
 };
 
 export const OrderHistory = () => {
