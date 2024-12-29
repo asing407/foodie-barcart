@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { MenuSection } from "@/components/MenuSection";
 import { Cart } from "@/components/Cart";
+import { OrderHistory } from "@/components/OrderHistory";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,6 @@ const fetchMenuItems = async (): Promise<MenuItem[]> => {
   
   if (error) throw error;
   
-  // Validate and transform the data to ensure category is either "food" or "drinks"
   return data.map(item => {
     if (item.category !== "food" && item.category !== "drinks") {
       throw new Error(`Invalid category: ${item.category}`);
@@ -90,6 +90,9 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <MenuSection title="Food Menu" items={foodItems} />
         <MenuSection title="Drinks Menu" items={drinkItems} />
+        <div className="mt-16">
+          <OrderHistory />
+        </div>
       </main>
 
       <footer className="bg-primary text-white py-8 mt-16">
