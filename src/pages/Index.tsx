@@ -8,8 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MenuItem } from "@/types";
-import { Loader2, QrCode } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { QRCodeSVG } from "qrcode.react";
 import {
   Carousel,
   CarouselContent,
@@ -22,18 +23,26 @@ const restaurantImages = [
   {
     url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
     alt: "Main dining area with warm ambient lighting",
+    title: "Elegant Main Dining",
+    description: "Experience fine dining in our beautifully lit main hall"
   },
   {
     url: "https://images.unsplash.com/photo-1552566626-52f8b828add9",
     alt: "Modern bar setup with elegant seating",
+    title: "Sophisticated Bar",
+    description: "Enjoy craft cocktails at our modern bar"
   },
   {
     url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b",
     alt: "Private dining section with luxurious decor",
+    title: "Private Dining",
+    description: "Intimate spaces for special occasions"
   },
   {
     url: "https://images.unsplash.com/photo-1559329007-40df8a9345d8",
     alt: "Outdoor seating area with scenic views",
+    title: "Outdoor Terrace",
+    description: "Al fresco dining with breathtaking views"
   },
 ];
 
@@ -60,6 +69,7 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const currentUrl = window.location.href;
 
   const { data: menuItems, isLoading, error } = useQuery({
     queryKey: ['menuItems'],
@@ -74,8 +84,7 @@ const Index = () => {
 
   const handleQrCodeClick = () => {
     if (isMobile) {
-      // Open the current URL in a new tab
-      window.open(window.location.href, '_blank');
+      window.open(currentUrl, '_blank');
     }
   };
 
@@ -121,11 +130,9 @@ const Index = () => {
                   />
                   <div className="absolute inset-0 bg-black/50">
                     <div className="flex flex-col items-center justify-center h-full text-white space-y-4 p-4">
-                      <h1 className="text-4xl md:text-6xl font-bold text-center">
-                        Welcome to Bistro & Bar
-                      </h1>
-                      <p className="text-xl md:text-2xl max-w-2xl mx-auto text-center">
-                        Experience fine dining and crafted cocktails in an elegant atmosphere
+                      <h3 className="text-2xl md:text-3xl font-bold">{image.title}</h3>
+                      <p className="text-lg md:text-xl max-w-2xl mx-auto text-center">
+                        {image.description}
                       </p>
                     </div>
                   </div>
@@ -154,7 +161,12 @@ const Index = () => {
               onClick={handleQrCodeClick}
               className="bg-white p-8 rounded-lg shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <QrCode className="w-32 h-32" />
+              <QRCodeSVG 
+                value={currentUrl}
+                size={128}
+                level="H"
+                includeMargin={true}
+              />
               <p className="mt-4 text-sm text-gray-500">
                 {isMobile ? "Tap to open menu" : "Scan to view menu"}
               </p>
