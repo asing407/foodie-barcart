@@ -6,10 +6,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useCart } from "@/hooks/useCart";
-import { X, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { CartItem } from "./cart/CartItem";
 
 export const Cart = () => {
   const { isOpen, toggleCart, items, updateQuantity, removeFromCart, total } = useCart();
@@ -33,9 +33,7 @@ export const Cart = () => {
         body: { cartItems: items },
       });
       
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw error;
 
       if (data?.url) {
         window.location.href = data.url;
@@ -62,44 +60,12 @@ export const Cart = () => {
         </SheetHeader>
         <div className="mt-8 space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-4 cart-item bg-muted rounded-lg p-4">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-20 h-20 object-cover rounded"
-              />
-              <div className="flex-1">
-                <h3 className="font-medium text-primary">{item.name}</h3>
-                <p className="text-sm text-gray-600">${item.price}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 bg-white"
-                    onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-8 text-center text-primary">{item.quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 bg-white"
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeFromCart(item.id)}
-                className="text-gray-500 hover:text-primary hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <CartItem
+              key={item.id}
+              item={item}
+              updateQuantity={updateQuantity}
+              removeFromCart={removeFromCart}
+            />
           ))}
           {items.length === 0 && (
             <p className="text-center text-gray-500">Your cart is empty</p>
