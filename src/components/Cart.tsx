@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CartItem } from "./cart/CartItem";
+import { Loader2 } from "lucide-react";
 
 export const Cart = () => {
   const { isOpen, toggleCart, items, updateQuantity, removeFromCart, total } = useCart();
@@ -17,6 +18,15 @@ export const Cart = () => {
   const { toast } = useToast();
 
   const handleCheckout = async () => {
+    if (items.length === 0) {
+      toast({
+        title: "Cart is empty",
+        description: "Please add items to your cart before checking out",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -26,7 +36,6 @@ export const Cart = () => {
           description: "You need to be logged in to checkout",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
@@ -58,7 +67,7 @@ export const Cart = () => {
       console.log('Received checkout URL:', data.url);
       window.location.href = data.url;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during checkout:', error);
       toast({
         title: "Checkout Error",
@@ -99,7 +108,14 @@ export const Cart = () => {
                 onClick={handleCheckout}
                 disabled={isLoading}
               >
-                {isLoading ? "Processing..." : "Checkout"}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Processing...
+                  </div>
+                ) : (
+                  "Checkout"
+                )}
               </Button>
             </div>
           )}

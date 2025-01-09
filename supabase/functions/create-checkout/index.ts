@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from 'https://esm.sh/stripe@14.21.0';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import {
+  createSupabaseClient,
+  createStripeClient,
+  validateCartItems,
+  createOrder,
+  createOrderItems,
+  createStripeSession
+} from "./utils.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,28 +20,18 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize clients
+    const supabase = createSupabaseClient();
+    const stripe = createStripeClient();
+
+    // Parse and validate request
     const { cartItems } = await req.json();
-    console.log('Received cart items:', cartItems);
-    
-    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-      throw new Error('Invalid cart items');
-    }
+    const validatedItems = validateCartItems(cartItems);
+    console.log('Received cart items:', validatedItems);
 
-    // Create Supabase client with service role key for admin access
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    // Get the user from the authorization header
+    // Get user from auth header
     const authHeader = req.headers.get('Authorization')!;
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
@@ -47,89 +43,34 @@ serve(async (req) => {
     console.log('Creating order for user:', user.id);
 
     // Calculate total amount
-    const totalAmount = cartItems.reduce((sum: number, item: any) => 
+    const totalAmount = validatedItems.reduce((sum, item) => 
       sum + (item.price * item.quantity), 0
     );
 
-    // Create a new order
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        total_amount: totalAmount,
-        status: 'pending'
-      })
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error('Order creation error:', orderError);
-      throw new Error('Failed to create order');
-    }
-
+    // Create order
+    const order = await createOrder(supabase, user.id, totalAmount);
     console.log('Order created:', order);
 
     // Create order items
-    const orderItems = cartItems.map((item: any) => ({
-      order_id: order.id,
-      menu_item_id: item.id,
-      quantity: item.quantity,
-      price_at_time: item.price
-    }));
-
-    const { error: itemsError } = await supabaseAdmin
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) {
-      console.error('Order items creation error:', itemsError);
-      // Cleanup the order if items creation fails
-      await supabaseAdmin
-        .from('orders')
-        .delete()
-        .match({ id: order.id });
-      throw new Error('Failed to create order items');
-    }
-
+    await createOrderItems(supabase, order, validatedItems);
     console.log('Order items created successfully');
 
-    // Initialize Stripe with the secret key
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-      apiVersion: '2023-10-16',
-      typescript: true,
-    });
-
-    console.log('Creating Stripe checkout session...');
-
+    // Get origin for redirect URLs
     const origin = req.headers.get('origin');
     if (!origin) {
       throw new Error('Origin header is required');
     }
 
     // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      success_url: `${origin}/success?order_id=${order.id}`,
-      cancel_url: `${origin}/?canceled=true`,
-      customer_email: user.email,
-      metadata: {
-        order_id: order.id,
-        user_id: user.id
-      },
-      line_items: cartItems.map((item: any) => ({
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: item.name,
-            images: item.image ? [item.image] : undefined,
-            description: item.description,
-          },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
-        },
-        quantity: item.quantity,
-      })),
-    });
+    console.log('Creating Stripe checkout session...');
+    const session = await createStripeSession(
+      stripe,
+      validatedItems,
+      order,
+      user.id,
+      origin,
+      user.email!
+    );
 
     console.log('Stripe session created successfully:', session.id);
     console.log('Checkout URL:', session.url);
