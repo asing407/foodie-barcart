@@ -1,11 +1,5 @@
+import { useState, useEffect } from 'react';
 import { RestaurantImage } from './RestaurantImage';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 
 export const restaurantImages = [
   {
@@ -34,18 +28,20 @@ export const restaurantImages = [
   },
 ];
 
-export const HeroCarousel = () => (
-  <div className="relative h-[80vh] mb-12">
-    <Carousel className="w-full h-full">
-      <CarouselContent>
-        {restaurantImages.map((image, index) => (
-          <CarouselItem key={index} className="h-full">
-            <RestaurantImage {...image} />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious className="left-4" />
-      <CarouselNext className="right-4" />
-    </Carousel>
-  </div>
-);
+export const HeroCarousel = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % restaurantImages.length);
+    }, 4000); // Change image every 2 seconds
+
+    return () => clearInterval(interval); // Clean up on unmount
+  }, []);
+
+  return (
+    <div className="relative w-full h-[80vh] mb-12 overflow-hidden">
+      <RestaurantImage {...restaurantImages[currentIndex]} />
+    </div>
+  );
+};

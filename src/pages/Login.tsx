@@ -27,7 +27,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-xl">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Welcome to Bistro & Bar
+            Welcome to The Alchemy
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to place your order

@@ -72,7 +72,7 @@ export const OrderHistory = () => {
   if (!orders?.length) {
     return (
       <div className="text-gray-500 p-4 text-center">
-        No orders found. Start shopping to see your order history!
+        No orders found. Start ordering to see your order history!
       </div>
     );
   }

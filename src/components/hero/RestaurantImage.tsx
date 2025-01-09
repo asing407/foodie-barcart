@@ -8,11 +8,11 @@ interface RestaurantImage {
 }
 
 export const RestaurantImage: FC<RestaurantImage> = ({ url, alt, title, description }) => (
-  <div className="relative h-full">
+  <div className="relative w-full h-full">
     <img
       src={url}
       alt={alt}
-      className="absolute inset-0 w-full h-full object-cover"
+      className="absolute inset-0 w-full h-full object-cover opacity-100 transition-opacity duration-1000"
     />
     <div className="absolute inset-0 bg-black/50">
       <div className="flex flex-col items-center justify-center h-full text-white space-y-4 p-4">
