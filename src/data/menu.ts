@@ -1,7 +1,7 @@
 export const menuItems = [
   // Food Items
   {
-    id: "1",
+    id: "123e4567-e89b-12d3-a456-426614174001",
     name: "Classic Burger",
     description: "Angus beef patty with lettuce, tomato, and special sauce",
     price: 11.99,
@@ -9,7 +9,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "2",
+    id: "123e4567-e89b-12d3-a456-426614174002",
     name: "Margherita Pizza",
     description: "Fresh mozzarella, tomatoes, and basil on thin crust",
     price: 12.99,
@@ -17,7 +17,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "3",
+    id: "123e4567-e89b-12d3-a456-426614174003",
     name: "Caesar Salad",
     description: "Crisp romaine, parmesan, croutons, and Caesar dressing",
     price: 8.99,
@@ -25,7 +25,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "4",
+    id: "123e4567-e89b-12d3-a456-426614174004",
     name: "Grilled Salmon",
     description: "Fresh Atlantic salmon with lemon herb butter",
     price: 12.99,
@@ -33,7 +33,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "5",
+    id: "123e4567-e89b-12d3-a456-426614174005",
     name: "Chicken Wings",
     description: "Choose from BBQ, Buffalo, or Honey Garlic",
     price: 9.99,
@@ -41,7 +41,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "6",
+    id: "123e4567-e89b-12d3-a456-426614174006",
     name: "Pasta Carbonara",
     description: "Creamy pasta with pancetta and parmesan",
     price: 10.99,
@@ -49,7 +49,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "7",
+    id: "123e4567-e89b-12d3-a456-426614174007",
     name: "Fish & Chips",
     description: "Beer-battered cod with crispy fries",
     price: 11.99,
@@ -57,7 +57,7 @@ export const menuItems = [
     category: "food"
   },
   {
-    id: "8",
+    id: "123e4567-e89b-12d3-a456-426614174008",
     name: "Vegetable Stir Fry",
     description: "Fresh vegetables in Asian sauce with rice",
     price: 9.99,
@@ -66,7 +66,7 @@ export const menuItems = [
   },
   // Drinks
   {
-    id: "9",
+    id: "123e4567-e89b-12d3-a456-426614174009",
     name: "Craft Beer",
     description: "Local IPA with citrus notes",
     price: 6.99,
@@ -74,7 +74,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "10",
+    id: "123e4567-e89b-12d3-a456-426614174010",
     name: "Red Wine",
     description: "House Cabernet Sauvignon",
     price: 7.99,
@@ -82,7 +82,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "11", 
+    id: "123e4567-e89b-12d3-a456-426614174011",
     name: "Old Fashioned",
     description: "Classic cocktail with bourbon and bitters",
     price: 8.99,
@@ -90,7 +90,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "12",
+    id: "123e4567-e89b-12d3-a456-426614174012",
     name: "Margarita",
     description: "Tequila, lime, and triple sec",
     price: 7.99,
@@ -98,7 +98,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "13",
+    id: "123e4567-e89b-12d3-a456-426614174013",
     name: "Mojito",
     description: "Rum, mint, lime, and soda",
     price: 7.99,
@@ -106,7 +106,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "14",
+    id: "123e4567-e89b-12d3-a456-426614174014",
     name: "Espresso Martini",
     description: "Vodka, coffee liqueur, and fresh espresso",
     price: 8.99,
@@ -114,7 +114,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "15",
+    id: "123e4567-e89b-12d3-a456-426614174015",
     name: "Craft Lemonade",
     description: "House-made lemonade with fresh mint",
     price: 5.99,
@@ -122,7 +122,7 @@ export const menuItems = [
     category: "drinks"
   },
   {
-    id: "16",
+    id: "123e4567-e89b-12d3-a456-426614174016",
     name: "Smoothie",
     description: "Fresh fruit blend of the day",
     price: 6.99,
