@@ -26,25 +26,43 @@ export const Cart = () => {
           description: "You need to be logged in to checkout",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { cartItems: items },
-      });
-      
-      if (error) throw error;
+      // Format cart items for the checkout
+      const formattedItems = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image
+      }));
 
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
+      console.log('Sending checkout request with items:', formattedItems);
+
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { cartItems: formattedItems }
+      });
+
+      if (error) {
+        console.error('Checkout error:', error);
+        throw error;
+      }
+
+      if (!data?.url) {
         throw new Error('No checkout URL received');
       }
+
+      console.log('Received checkout URL:', data.url);
+      window.location.href = data.url;
+
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error during checkout:', error);
       toast({
-        title: "Error",
-        description: "Failed to create checkout session",
+        title: "Checkout Error",
+        description: error.message || "Failed to create checkout session",
         variant: "destructive",
       });
     } finally {
