@@ -126,6 +126,35 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       status_updates: {
         Row: {
           created_at: string

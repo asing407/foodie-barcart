@@ -31,3 +31,10 @@ export interface OrderItem {
   price_at_time: number;
   created_at: string;
 }
+
+export interface Receipt {
+  id: string;
+  order_id: string;
+  file_path: string;
+  created_at: string;
+}

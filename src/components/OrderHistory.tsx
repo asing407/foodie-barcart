@@ -95,6 +95,7 @@ export const OrderHistory = () => {
               <OrderDetails 
                 order_items={order.order_items}
                 status_updates={order.status_updates}
+                orderId={order.id}
               />
             </AccordionContent>
           </AccordionItem>
