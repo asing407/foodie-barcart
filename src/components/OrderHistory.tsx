@@ -47,7 +47,9 @@ const fetchOrders = async (): Promise<OrderWithItems[]> => {
       ...item,
       menu_item: {
         ...item.menu_item,
-        category: item.menu_item.category as "food" | "drinks"
+        category: item.menu_item.category as "food" | "drinks",
+        dietary_type: item.menu_item.dietary_type as "veg" | "non-veg" | undefined,
+        drink_type: item.menu_item.drink_type as "alcoholic" | "non-alcoholic" | undefined
       }
     }))
   }));
