@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Order, OrderItem, MenuItem } from "@/types";
+import { Order, OrderItem, MenuItem, StatusUpdate } from "@/types";
 import { Loader2 } from "lucide-react";
 import {
   Accordion,
@@ -13,12 +13,7 @@ import { OrderDetails } from "./orders/OrderDetails";
 
 interface OrderWithItems extends Order {
   order_items: (OrderItem & { menu_item: MenuItem })[];
-  status_updates: { 
-    status: string; 
-    created_at: string; 
-    notes: string | null;
-    payment_status: string;
-  }[];
+  status_updates: StatusUpdate[];
 }
 
 const fetchOrders = async (): Promise<OrderWithItems[]> => {
@@ -51,6 +46,10 @@ const fetchOrders = async (): Promise<OrderWithItems[]> => {
         dietary_type: item.menu_item.dietary_type as "veg" | "non-veg" | undefined,
         drink_type: item.menu_item.drink_type as "alcoholic" | "non-alcoholic" | undefined
       }
+    })),
+    status_updates: order.status_updates.map(update => ({
+      ...update,
+      payment_status: update.payment_status as "pending" | "success" | "failed"
     }))
   }));
 };

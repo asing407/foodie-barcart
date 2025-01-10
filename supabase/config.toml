@@ -2,7 +2,3 @@ project_id = "cuebzjfcxrpeeokbzmca"
 
 [functions.create-checkout]
 verify_jwt = true
-project_id = "restaurent data"
-
-api_url = "https://cuebzjfcxrpeeokbzmca.supabase.co"
-api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZWJ6amZjeHJwZWVva2J6bWNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUzMjA1MTUsImV4cCI6MjA1MDg5NjUxNX0.ipB8mXiJxEJOJoJ-QyFtQTZWntywzNUBxuR-cnYgZSQ"
