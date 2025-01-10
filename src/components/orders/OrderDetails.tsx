@@ -5,16 +5,23 @@ import { FileText, Download } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface OrderDetailsProps {
   order_items: (OrderItem & { menu_item: MenuItem })[];
-  status_updates: { status: string; created_at: string; notes: string | null }[];
+  status_updates: { 
+    status: string; 
+    created_at: string; 
+    notes: string | null;
+    payment_status: string;
+  }[];
   orderId: string;
 }
 
 export const OrderDetails = ({ order_items, status_updates, orderId }: OrderDetailsProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const latestStatus = status_updates[status_updates.length - 1];
 
   const generateReceipt = async () => {
     setIsGenerating(true);
@@ -73,18 +80,30 @@ export const OrderDetails = ({ order_items, status_updates, orderId }: OrderDeta
 
   return (
     <div className="p-4 space-y-4">
+      {latestStatus?.payment_status === 'success' && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <p className="text-green-800">
+            Thank you for your order! You will be served at your table soon.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <h4 className="font-semibold">Status Updates</h4>
         <div className="space-y-1">
           {status_updates.map((update, index) => (
-            <div key={index} className="text-sm">
-              <span className="font-medium">{update.status}</span> - 
-              {format(new Date(update.created_at), 'PPp')}
+            <div key={index} className="text-sm flex items-center gap-2">
+              <span className="font-medium">{update.status}</span>
+              <Badge variant={update.payment_status === 'success' ? 'default' : 'secondary'}>
+                Payment: {update.payment_status}
+              </Badge>
+              - {format(new Date(update.created_at), 'PPp')}
               {update.notes && <p className="text-gray-600 ml-4">{update.notes}</p>}
             </div>
           ))}
         </div>
       </div>
+
       <div>
         <h4 className="font-semibold mb-2">Items</h4>
         <div className="space-y-2">
@@ -93,11 +112,12 @@ export const OrderDetails = ({ order_items, status_updates, orderId }: OrderDeta
               <span>
                 {item.quantity}x {item.menu_item.name}
               </span>
-              <span>${item.price_at_time * item.quantity}</span>
+              <span>${(item.price_at_time * item.quantity).toFixed(2)}</span>
             </div>
           ))}
         </div>
       </div>
+
       <div className="pt-4">
         <Button
           onClick={generateReceipt}

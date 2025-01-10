@@ -14,6 +14,8 @@ export type Database = {
           category: string
           created_at: string
           description: string
+          dietary_type: string | null
+          drink_type: string | null
           id: string
           image: string
           name: string
@@ -23,6 +25,8 @@ export type Database = {
           category: string
           created_at?: string
           description: string
+          dietary_type?: string | null
+          drink_type?: string | null
           id?: string
           image: string
           name: string
@@ -32,6 +36,8 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string
+          dietary_type?: string | null
+          drink_type?: string | null
           id?: string
           image?: string
           name?: string
@@ -161,6 +167,7 @@ export type Database = {
           id: string
           notes: string | null
           order_id: string
+          payment_status: string | null
           status: string
         }
         Insert: {
@@ -168,6 +175,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_id: string
+          payment_status?: string | null
           status: string
         }
         Update: {
@@ -175,6 +183,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_id?: string
+          payment_status?: string | null
           status?: string
         }
         Relationships: [

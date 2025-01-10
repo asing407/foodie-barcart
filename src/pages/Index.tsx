@@ -78,8 +78,8 @@ const Index = () => {
       <QRCodeSection />
 
       <main className="container mx-auto px-4 py-8">
-        <MenuSection title="Food Menu" items={foodItems} />
-        <MenuSection title="Drinks Menu" items={drinkItems} />
+        <MenuSection title="Food Menu" items={foodItems} type="food" />
+        <MenuSection title="Drinks Menu" items={drinkItems} type="drinks" />
         <div className="mt-16">
           <OrderHistory />
         </div>
@@ -87,7 +87,7 @@ const Index = () => {
 
       <footer className="bg-primary text-white py-8 mt-16">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-sm">© 2024 The Alchemy Bar & Restaurent. All rights reserved.</p>
+          <p className="text-sm">© 2024 The Alchemy Bar & Restaurant. All rights reserved.</p>
         </div>
       </footer>
     </div>

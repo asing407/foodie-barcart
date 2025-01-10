@@ -39,7 +39,6 @@ export const Cart = () => {
         return;
       }
 
-      // Format cart items for the checkout
       const formattedItems = items.map(item => ({
         id: item.id,
         name: item.name,
@@ -81,45 +80,47 @@ export const Cart = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={toggleCart}>
-      <SheetContent className="w-full sm:max-w-lg bg-white">
+      <SheetContent className="w-full sm:max-w-lg bg-white flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-primary">Your Cart</SheetTitle>
         </SheetHeader>
-        <div className="mt-8 space-y-4">
-          {items.map((item) => (
-            <CartItem
-              key={item.id}
-              item={item}
-              updateQuantity={updateQuantity}
-              removeFromCart={removeFromCart}
-            />
-          ))}
-          {items.length === 0 && (
-            <p className="text-center text-gray-500">Your cart is empty</p>
-          )}
-          {items.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex justify-between text-lg font-medium text-primary">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-              <Button 
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-                onClick={handleCheckout}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </div>
-                ) : (
-                  "Checkout"
-                )}
-              </Button>
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto mt-8">
+          <div className="space-y-4 pr-4">
+            {items.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                updateQuantity={updateQuantity}
+                removeFromCart={removeFromCart}
+              />
+            ))}
+            {items.length === 0 && (
+              <p className="text-center text-gray-500">Your cart is empty</p>
+            )}
+          </div>
         </div>
+        {items.length > 0 && (
+          <div className="border-t pt-4 mt-4 space-y-4">
+            <div className="flex justify-between text-lg font-medium text-primary">
+              <span>Total</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+            <Button 
+              className="w-full bg-primary hover:bg-primary/90 text-white"
+              onClick={handleCheckout}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </div>
+              ) : (
+                "Checkout"
+              )}
+            </Button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
