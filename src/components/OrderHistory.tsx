@@ -13,7 +13,12 @@ import { OrderDetails } from "./orders/OrderDetails";
 
 interface OrderWithItems extends Order {
   order_items: (OrderItem & { menu_item: MenuItem })[];
-  status_updates: { status: string; created_at: string; notes: string | null }[];
+  status_updates: { 
+    status: string; 
+    created_at: string; 
+    notes: string | null;
+    payment_status: string;
+  }[];
 }
 
 const fetchOrders = async (): Promise<OrderWithItems[]> => {
@@ -28,7 +33,8 @@ const fetchOrders = async (): Promise<OrderWithItems[]> => {
       status_updates (
         status,
         created_at,
-        notes
+        notes,
+        payment_status
       )
     `)
     .order('created_at', { ascending: false });

@@ -6,6 +6,8 @@ export interface MenuItem {
   image: string;
   category: "food" | "drinks";
   created_at?: string;
+  dietary_type?: "veg" | "non-veg";
+  drink_type?: "alcoholic" | "non-alcoholic";
 }
 
 export interface Profile {
@@ -37,4 +39,13 @@ export interface Receipt {
   order_id: string;
   file_path: string;
   created_at: string;
+}
+
+export interface StatusUpdate {
+  id: string;
+  order_id: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  payment_status: string;
 }

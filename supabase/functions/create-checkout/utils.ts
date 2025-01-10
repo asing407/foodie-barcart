@@ -1,6 +1,6 @@
 import { CartItem, Order, OrderItem } from './types';
 import { createClient } from '@supabase/supabase-js';
-import Stripe from 'stripe';
+import { Stripe } from 'npm:stripe@14.14.0';
 
 export const createSupabaseClient = () => {
   return createClient(
