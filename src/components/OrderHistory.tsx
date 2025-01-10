@@ -26,10 +26,7 @@ const fetchOrders = async (): Promise<OrderWithItems[]> => {
         menu_item: menu_items (*)
       ),
       status_updates (
-        status,
-        created_at,
-        notes,
-        payment_status
+        *
       )
     `)
     .order('created_at', { ascending: false });
@@ -49,6 +46,11 @@ const fetchOrders = async (): Promise<OrderWithItems[]> => {
     })),
     status_updates: order.status_updates.map(update => ({
       ...update,
+      id: update.id,
+      order_id: update.order_id,
+      status: update.status,
+      notes: update.notes,
+      created_at: update.created_at,
       payment_status: update.payment_status as "pending" | "success" | "failed"
     }))
   }));
