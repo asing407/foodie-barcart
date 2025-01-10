@@ -14,7 +14,9 @@ const RESTAURANT_INFO = {
   zip: "30301",
   phone: "(555) 123-4567",
   email: "info@alchemybar.com",
-  website: "www.alchemybar.com"
+  website: "www.alchemybar.com",
+  taxRate: 0.08,
+  serviceCharge: 0.10
 };
 
 serve(async (req) => {
@@ -37,7 +39,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch order details with payment status
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -60,17 +61,19 @@ serve(async (req) => {
       .single()
 
     if (orderError || !order) {
+      console.error('Error fetching order:', orderError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch order details', details: orderError }),
+        JSON.stringify({ error: 'Failed to fetch order details' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
     const latestStatus = order.status_updates[order.status_updates.length - 1];
-    const paymentStatus = latestStatus?.payment_status || 'pending';
-    const cardLastFour = paymentStatus === 'success' ? '4242' : ''; // In a real app, fetch this from your payment provider
+    const subtotal = order.total_amount;
+    const tax = subtotal * RESTAURANT_INFO.taxRate;
+    const serviceCharge = subtotal * RESTAURANT_INFO.serviceCharge;
+    const total = subtotal + tax + serviceCharge;
 
-    // Generate receipt HTML
     const receiptHtml = `
       <!DOCTYPE html>
       <html>
@@ -78,7 +81,6 @@ serve(async (req) => {
           <style>
             body { 
               font-family: Arial, sans-serif; 
-              margin: 40px;
               max-width: 800px;
               margin: 0 auto;
               padding: 20px;
@@ -103,18 +105,39 @@ serve(async (req) => {
               display: flex;
               justify-content: space-between;
               margin: 10px 0;
+              padding: 5px 0;
             }
-            .total { 
-              margin-top: 20px;
-              font-weight: bold;
+            .item-details {
+              flex: 1;
+            }
+            .item-price {
               text-align: right;
+              min-width: 80px;
+            }
+            .totals {
+              margin-top: 20px;
+              text-align: right;
+            }
+            .total-row {
+              display: flex;
+              justify-content: flex-end;
+              margin: 5px 0;
+            }
+            .total-label {
+              margin-right: 20px;
+            }
+            .grand-total {
               font-size: 1.2em;
+              font-weight: bold;
+              margin-top: 10px;
+              padding-top: 10px;
+              border-top: 2px solid #eee;
             }
             .payment-info {
               margin-top: 30px;
               text-align: center;
               padding: 20px;
-              background-color: ${paymentStatus === 'success' ? '#f0fff4' : '#fff5f5'};
+              background-color: ${latestStatus.payment_status === 'success' ? '#f0fff4' : '#fff5f5'};
               border-radius: 8px;
             }
             .footer {
@@ -141,29 +164,46 @@ serve(async (req) => {
             <h2>Receipt</h2>
             <p>Order #${order.id}</p>
             <p>Date: ${new Date(order.created_at).toLocaleDateString()}</p>
+            <p>Time: ${new Date(order.created_at).toLocaleTimeString()}</p>
           </div>
 
           <div class="items">
             ${order.order_items.map(item => `
               <div class="item">
-                <span>${item.quantity}x ${item.menu_item.name}</span>
-                <span>$${(item.price_at_time * item.quantity).toFixed(2)}</span>
+                <div class="item-details">
+                  <strong>${item.quantity}x ${item.menu_item.name}</strong>
+                  <div style="color: #666; font-size: 0.9em;">${item.menu_item.description}</div>
+                </div>
+                <div class="item-price">$${(item.price_at_time * item.quantity).toFixed(2)}</div>
               </div>
             `).join('')}
           </div>
 
-          <div class="total">
-            Total: $${order.total_amount.toFixed(2)}
+          <div class="totals">
+            <div class="total-row">
+              <span class="total-label">Subtotal:</span>
+              <span>$${subtotal.toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span class="total-label">Tax (${(RESTAURANT_INFO.taxRate * 100).toFixed(0)}%):</span>
+              <span>$${tax.toFixed(2)}</span>
+            </div>
+            <div class="total-row">
+              <span class="total-label">Service Charge (${(RESTAURANT_INFO.serviceCharge * 100).toFixed(0)}%):</span>
+              <span>$${serviceCharge.toFixed(2)}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span class="total-label">Total:</span>
+              <span>$${total.toFixed(2)}</span>
+            </div>
           </div>
 
           <div class="payment-info">
-            <h3>Payment Status: ${paymentStatus.toUpperCase()}</h3>
-            ${paymentStatus === 'success' ? `
-              <p>Payment completed successfully</p>
-              <p>Card ending in: ${cardLastFour}</p>
-            ` : `
-              <p>Payment pending</p>
-            `}
+            <h3>Payment Status: ${latestStatus.payment_status.toUpperCase()}</h3>
+            <p>Transaction Date: ${new Date(latestStatus.created_at).toLocaleString()}</p>
+            ${latestStatus.payment_status === 'success' 
+              ? '<p>Payment completed successfully</p>' 
+              : '<p>Payment pending</p>'}
           </div>
 
           <div class="footer">
@@ -174,7 +214,6 @@ serve(async (req) => {
       </html>
     `
 
-    // Upload receipt to storage
     const receiptFileName = `receipt-${orderId}.html`
     const { error: uploadError } = await supabase.storage
       .from('receipts')
@@ -184,13 +223,13 @@ serve(async (req) => {
       })
 
     if (uploadError) {
+      console.error('Error uploading receipt:', uploadError);
       return new Response(
-        JSON.stringify({ error: 'Failed to upload receipt', details: uploadError }),
+        JSON.stringify({ error: 'Failed to upload receipt' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
 
-    // Save receipt record
     const { error: receiptError } = await supabase
       .from('receipts')
       .insert({
@@ -199,8 +238,9 @@ serve(async (req) => {
       })
 
     if (receiptError) {
+      console.error('Error saving receipt record:', receiptError);
       return new Response(
-        JSON.stringify({ error: 'Failed to save receipt record', details: receiptError }),
+        JSON.stringify({ error: 'Failed to save receipt record' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       )
     }
@@ -213,8 +253,9 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
+    console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred', details: error.message }),
+      JSON.stringify({ error: 'An unexpected error occurred' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }

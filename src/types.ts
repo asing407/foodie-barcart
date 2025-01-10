@@ -47,5 +47,5 @@ export interface StatusUpdate {
   status: string;
   notes: string | null;
   created_at: string;
-  payment_status: string;
+  payment_status: "pending" | "success" | "failed";
 }
