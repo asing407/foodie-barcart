@@ -20,15 +20,12 @@ const fetchMenuItems = async (): Promise<MenuItem[]> => {
   
   if (error) throw error;
   
-  return data.map(item => {
-    if (item.category !== "food" && item.category !== "drinks") {
-      throw new Error(`Invalid category: ${item.category}`);
-    }
-    return {
-      ...item,
-      category: item.category as "food" | "drinks"
-    };
-  });
+  return data.map(item => ({
+    ...item,
+    category: item.category as "food" | "drinks",
+    dietary_type: item.dietary_type as "veg" | "non-veg" | undefined,
+    drink_type: item.drink_type as "alcoholic" | "non-alcoholic" | undefined
+  }));
 };
 
 const Index = () => {
