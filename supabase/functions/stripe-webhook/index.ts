@@ -21,6 +21,8 @@ serve(async (req) => {
 
   try {
     if (req.method === "POST") {
+      console.log('Received webhook request to URL:', req.url);
+      
       const signature = req.headers.get("stripe-signature")
       if (!signature || !webhookSecret) {
         console.error('Missing webhook secret or signature')
