@@ -46,9 +46,11 @@ To run the project locally, ensure you have the following installed:
    git clone https://github.com/asing407/foodie-barcart.git
    cd foodie-barcart
 2. Install dependencies:
-   npm install
+   npm i
    or
    yarn install
+   and
+   npm install vite
 
 4. Set up Supabase (for database):
    Create a Supabase account and set up a new project.
@@ -64,7 +66,7 @@ To run the project locally, ensure you have the following installed:
    yarn start
 
 
-Open the app in your browser at http://localhost:3000
+Open the app in your browser at http://localhost:8080
 
 ## 📝 Roadmap
 This project is still a work in progress, and more features will be added over time. Some upcoming functionalities include:
