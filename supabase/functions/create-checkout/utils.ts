@@ -1,4 +1,4 @@
-import { CartItem, Order, OrderItem } from './types';
+import { CartItem, Order, OrderItem } from './types.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.7.1';
 import { Stripe } from 'npm:stripe@14.14.0';
 
