@@ -1,69 +1,80 @@
-# Welcome to your Lovable project
+The Alchemy - Restaurant & Bar Web Application 🍽️🍸
+The Alchemy is a modern, fully functional restaurant and bar web application that allows users to browse the menu, place orders, and securely pay for their food and drinks. The app features a mobile-first design with QR code ordering, a countdown timer for order delivery, and real-time notifications. It’s built using React, TypeScript, Tailwind CSS, and Supabase, with Stripe for payment processing.
 
-## Project info
+🚀 Features
+Mobile-First UI: Optimized for smartphones with a responsive design.
+QR Code Ordering: Users can scan QR codes to view menus and place orders directly from their phones.
+Real-Time Order Tracking: Instant updates on order status with real-time notifications.
+Order Management: Dynamic cart and checkout functionality, allowing users to easily manage their orders.
+Stripe Integration: Secure and seamless payment system with Stripe for PCI-compliant transactions.
+10-Minute Delivery Timer: A countdown timer for the order delivery with an interactive "Order Received" button to stop the timer.
+🛠️ Tech Stack
+Frontend:
+React: A JavaScript library for building user interfaces.
+TypeScript: Adds static typing to JavaScript for better scalability and reliability.
+Tailwind CSS: Utility-first CSS framework for responsive and fast UI development.
+Backend:
+Supabase: Open-source alternative to Firebase for database management.
+Payment Integration:
+Stripe: A popular payment processing platform.
+Deployment:
+Vercel (currently) for rapid deployment and hosting.
+AWS (planned) for better scalability and performance.
+📱 Demo
+Check out the live demo of The Alchemy:
+👉 The Alchemy - Live App
 
-**URL**: https://lovable.dev/projects/bbc0258e-d08a-4a7b-9641-a78192442953
+⚡ Installation
+Prerequisites
+To run the project locally, ensure you have the following installed:
 
-## How can I edit this code?
+Node.js: Install Node.js
+npm or yarn: A package manager (npm comes with Node.js)
+Steps to Set Up
+Clone the repository to your local machine:
 
-There are several ways of editing your application.
+bash
+Copy code
+git clone https://github.com/your-username/the-alchemy.git
+cd the-alchemy
+Install dependencies:
 
-**Use Lovable**
+bash
+Copy code
+npm install
+# or
+yarn install
+Set up Supabase (for database):
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bbc0258e-d08a-4a7b-9641-a78192442953) and start prompting.
+Create a Supabase account and set up a new project.
+Add your Supabase URL and API key to .env file (template available in the repo).
+Set up Stripe (for payment):
 
-Changes made via Lovable will be committed automatically to this repo.
+Create a Stripe account and get your API keys.
+Add the keys to the .env file.
+Run the application:
 
-**Use your preferred IDE**
+bash
+Copy code
+npm start
+# or
+yarn start
+Open the app in your browser at http://localhost:3000.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+📝 Roadmap
+This project is still a work in progress, and more features will be added over time. Some upcoming functionalities include:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Improved order tracking and user notifications.
+User profiles for order history and preferences.
+Support for multiple payment methods.
+Enhanced admin dashboard for managing orders.
+🙏 Special Thanks
+A special thank you to Aryan Singh for providing invaluable guidance and support throughout the development of this project.
 
-Follow these steps:
+💬 Contact
+Feel free to open an issue or send a pull request if you have any suggestions, improvements, or questions!
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/bbc0258e-d08a-4a7b-9641-a78192442953) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+This README includes the key project features, setup instructions, and some additional helpful information to get started with your repository. You can easily update or extend it as the project evolves!
