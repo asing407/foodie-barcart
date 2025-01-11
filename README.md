@@ -45,3 +45,43 @@ To run the project locally, ensure you have the following installed:
    ```bash
    git clone https://github.com/asing407/foodie-barcart.git
    cd foodie-barcart
+2. Install dependencies:
+   npm install
+   # or
+   yarn install
+
+4. Set up Supabase (for database):
+   Create a Supabase account and set up a new project.
+   Add your Supabase URL and API key to .env file (template available in the repo).
+   
+5. Set up Stripe (for payment):
+   
+   Create a Stripe account and get your API keys.
+   Add the keys to the .env file.
+6. Run the application:
+   npm start
+   # or
+   yarn start
+
+
+Open the app in your browser at http://localhost:3000
+
+## 📝 Roadmap
+This project is still a work in progress, and more features will be added over time. Some upcoming functionalities include:
+
+Improved order tracking and user notifications.
+User profiles for order history and preferences.
+Support for multiple payment methods.
+Enhanced admin dashboard for managing orders.
+## 🙏 Special Thanks
+A special thank you to Aryan Singh for providing invaluable guidance and support throughout the development of this project.
+
+## 💬 Contact
+Feel free to open an issue or send a pull request if you have any suggestions, improvements, or questions!
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+This format is optimized for a GitHub repository. You can copy-paste it directly into your `README.md` file in your GitHub repo.
+
+
