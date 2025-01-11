@@ -22,6 +22,7 @@ serve(async (req) => {
   try {
     if (req.method === "POST") {
       console.log('Received webhook request to URL:', req.url);
+      console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
       
       const signature = req.headers.get("stripe-signature")
       if (!signature || !webhookSecret) {
@@ -33,6 +34,8 @@ serve(async (req) => {
       }
 
       const body = await req.text()
+      console.log('Webhook body:', body);
+      
       let event
       
       try {
