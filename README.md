@@ -65,7 +65,6 @@ To run the project locally, ensure you have the following installed:
    # or
    yarn start
 
-
 Open the app in your browser at http://localhost:8080
 
 ## 📝 Roadmap
@@ -87,3 +86,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 This format is optimized for a GitHub repository. You can copy-paste it directly into your `README.md` file in your GitHub repo.
 
 
+
+https://github.com/user-attachments/assets/14347dbd-ebbf-4337-8004-5339f29fec7d
