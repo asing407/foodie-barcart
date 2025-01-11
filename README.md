@@ -43,5 +43,5 @@ To run the project locally, ensure you have the following installed:
 
 1. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/your-username/the-alchemy.git
-   cd the-alchemy
+   git clone https://github.com/asing407/foodie-barcart.git
+   cd foodie-barcart
