@@ -47,7 +47,7 @@ To run the project locally, ensure you have the following installed:
    cd foodie-barcart
 2. Install dependencies:
    npm install
-   # or
+   or
    yarn install
 
 4. Set up Supabase (for database):
