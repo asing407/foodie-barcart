@@ -37,7 +37,7 @@ serve(async (req) => {
       }
 
       const body = await req.text()
-      console.log('Webhook body:', body);
+      console.log('Webhook body length:', body.length);
       
       let event
       
@@ -60,6 +60,7 @@ serve(async (req) => {
         const session = event.data.object;
         console.log('Processing checkout session:', session.id);
         console.log('Order ID from metadata:', session.metadata?.order_id);
+        console.log('Full session data:', JSON.stringify(session, null, 2));
 
         if (!session.metadata?.order_id) {
           console.error('No order ID found in session metadata');
@@ -75,6 +76,24 @@ serve(async (req) => {
         );
 
         console.log('Updating order status for order:', session.metadata.order_id);
+
+        // First, check if a status update already exists
+        const { data: existingStatus } = await supabase
+          .from('status_updates')
+          .select('*')
+          .eq('order_id', session.metadata.order_id)
+          .eq('payment_status', 'success')
+          .single();
+
+        if (existingStatus) {
+          console.log('Payment status already updated for order:', session.metadata.order_id);
+          return new Response(JSON.stringify({ received: true }), {
+            headers: { 
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            },
+          });
+        }
 
         // Update order status
         const { error: statusError } = await supabase
