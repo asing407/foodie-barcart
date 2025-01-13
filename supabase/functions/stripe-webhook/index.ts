@@ -55,11 +55,10 @@ serve(async (req) => {
       // Handle different types of events
       switch (event.type) {
         case 'checkout.session.completed':
-        case 'payment_intent.succeeded':
-          console.log(`Processing successful payment event: ${event.type}`);
-          const session = event.data.object;
+          console.log(`Processing checkout.session.completed event`);
+          const checkoutSession = event.data.object;
           
-          if (!session.metadata?.order_id) {
+          if (!checkoutSession.metadata?.order_id) {
             console.error('No order ID found in session metadata');
             return new Response('No order ID found in session metadata', { 
               status: 400,
@@ -71,12 +70,12 @@ serve(async (req) => {
           const { data: existingStatus } = await supabase
             .from('status_updates')
             .select('*')
-            .eq('order_id', session.metadata.order_id)
+            .eq('order_id', checkoutSession.metadata.order_id)
             .eq('payment_status', 'success')
             .single();
 
           if (existingStatus) {
-            console.log('Payment already marked as successful for order:', session.metadata.order_id);
+            console.log('Payment already marked as successful for order:', checkoutSession.metadata.order_id);
             return new Response(JSON.stringify({ received: true }), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
@@ -86,10 +85,10 @@ serve(async (req) => {
           const { error: statusError } = await supabase
             .from('status_updates')
             .insert({
-              order_id: session.metadata.order_id,
+              order_id: checkoutSession.metadata.order_id,
               status: 'confirmed',
               payment_status: 'success',
-              notes: `Payment confirmed via Stripe. Session ID: ${session.id}`
+              notes: `Payment confirmed via Stripe. Session ID: ${checkoutSession.id}`
             });
 
           if (statusError) {
@@ -101,28 +100,49 @@ serve(async (req) => {
           const { error: orderError } = await supabase
             .from('orders')
             .update({ status: 'confirmed' })
-            .eq('id', session.metadata.order_id);
+            .eq('id', checkoutSession.metadata.order_id);
 
           if (orderError) {
             console.error('Error updating order:', orderError);
             throw orderError;
           }
 
-          console.log('Successfully processed payment for order:', session.metadata.order_id);
+          console.log('Successfully processed checkout.session.completed for order:', checkoutSession.metadata.order_id);
+          break;
+
+        case 'payment_intent.succeeded':
+          console.log('Processing payment_intent.succeeded event');
+          const paymentIntent = event.data.object;
+          
+          if (paymentIntent.metadata?.order_id) {
+            const { error: successError } = await supabase
+              .from('status_updates')
+              .insert({
+                order_id: paymentIntent.metadata.order_id,
+                status: 'payment_successful',
+                payment_status: 'success',
+                notes: `Payment successful. Payment Intent ID: ${paymentIntent.id}`
+              });
+
+            if (successError) {
+              console.error('Error updating payment success status:', successError);
+              throw successError;
+            }
+          }
           break;
 
         case 'payment_intent.payment_failed':
           console.log('Payment failed:', event.data.object);
-          const failedSession = event.data.object;
+          const failedPaymentIntent = event.data.object;
           
-          if (failedSession.metadata?.order_id) {
+          if (failedPaymentIntent.metadata?.order_id) {
             const { error: failureError } = await supabase
               .from('status_updates')
               .insert({
-                order_id: failedSession.metadata.order_id,
+                order_id: failedPaymentIntent.metadata.order_id,
                 status: 'payment_failed',
                 payment_status: 'failed',
-                notes: `Payment failed. Reason: ${failedSession.last_payment_error?.message || 'Unknown error'}`
+                notes: `Payment failed. Reason: ${failedPaymentIntent.last_payment_error?.message || 'Unknown error'}`
               });
 
             if (failureError) {
