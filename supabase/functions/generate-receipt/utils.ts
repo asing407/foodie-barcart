@@ -1,4 +1,4 @@
-import { RESTAURANT_INFO } from './config';
+import { RESTAURANT_INFO } from './config.ts';
 
 export const calculateTotals = (subtotal: number) => {
   const tax = subtotal * RESTAURANT_INFO.taxRate;
