@@ -47,9 +47,10 @@ serve(async (req) => {
         })
       }
 
-      if (event.type === 'checkout.session.completed') {
+      // Handle both checkout.session.completed and payment_intent.succeeded events
+      if (event.type === 'checkout.session.completed' || event.type === 'payment_intent.succeeded') {
         const session = event.data.object;
-        console.log('Processing completed checkout session:', session.id);
+        console.log('Processing completed payment:', session.id);
         console.log('Order ID from metadata:', session.metadata?.order_id);
 
         if (!session.metadata?.order_id) {
