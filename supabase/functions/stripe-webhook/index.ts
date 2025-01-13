@@ -15,21 +15,17 @@ const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
 
 serve(async (req) => {
   try {
-    // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
       console.log('Received OPTIONS request');
       return new Response(null, { headers: corsHeaders });
     }
 
     if (req.method === "POST") {
-      console.log('Received webhook request to URL:', req.url);
-      console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+      console.log('Received webhook request');
       
       const signature = req.headers.get("stripe-signature")
       if (!signature || !webhookSecret) {
         console.error('Missing webhook secret or signature');
-        console.log('Signature:', signature);
-        console.log('Webhook Secret exists:', !!webhookSecret);
         return new Response('Webhook secret or signature missing', { 
           status: 400,
           headers: corsHeaders
@@ -37,30 +33,24 @@ serve(async (req) => {
       }
 
       const body = await req.text()
-      console.log('Webhook body length:', body.length);
+      console.log('Webhook body received, length:', body.length);
       
       let event
-      
       try {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
         console.log('Successfully constructed event:', event.type);
       } catch (err) {
         console.error(`Webhook signature verification failed:`, err);
-        console.log('Signature used:', signature);
-        console.log('Body length:', body.length);
         return new Response(`Webhook signature verification failed: ${err.message}`, { 
           status: 400,
           headers: corsHeaders
         })
       }
 
-      console.log('Processing event type:', event.type);
-
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-        console.log('Processing checkout session:', session.id);
+        console.log('Processing completed checkout session:', session.id);
         console.log('Order ID from metadata:', session.metadata?.order_id);
-        console.log('Full session data:', JSON.stringify(session, null, 2));
 
         if (!session.metadata?.order_id) {
           console.error('No order ID found in session metadata');
@@ -75,9 +65,7 @@ serve(async (req) => {
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         );
 
-        console.log('Updating order status for order:', session.metadata.order_id);
-
-        // First, check if a status update already exists
+        // First check if we already processed this payment
         const { data: existingStatus } = await supabase
           .from('status_updates')
           .select('*')
@@ -86,16 +74,15 @@ serve(async (req) => {
           .single();
 
         if (existingStatus) {
-          console.log('Payment status already updated for order:', session.metadata.order_id);
+          console.log('Payment already marked as successful for order:', session.metadata.order_id);
           return new Response(JSON.stringify({ received: true }), {
-            headers: { 
-              ...corsHeaders,
-              "Content-Type": "application/json"
-            },
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        // Update order status
+        console.log('Updating payment status for order:', session.metadata.order_id);
+
+        // Insert new status update with success payment status
         const { error: statusError } = await supabase
           .from('status_updates')
           .insert({
@@ -107,20 +94,27 @@ serve(async (req) => {
 
         if (statusError) {
           console.error('Error updating order status:', statusError);
-          return new Response('Error updating order status', { 
-            status: 500,
-            headers: corsHeaders
-          });
+          throw statusError;
         }
 
-        console.log(`Successfully processed payment for order: ${session.metadata.order_id}`);
+        console.log('Successfully updated payment status for order:', session.metadata.order_id);
+
+        // Update the order status itself
+        const { error: orderError } = await supabase
+          .from('orders')
+          .update({ status: 'confirmed' })
+          .eq('id', session.metadata.order_id);
+
+        if (orderError) {
+          console.error('Error updating order:', orderError);
+          throw orderError;
+        }
+
+        console.log('Successfully processed payment for order:', session.metadata.order_id);
       }
 
       return new Response(JSON.stringify({ received: true }), {
-        headers: { 
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -130,13 +124,9 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error('Error processing webhook:', err);
-    console.log('Error details:', {
-      message: err.message,
-      stack: err.stack
-    });
-    return new Response('Webhook processing failed', { 
-      status: 400,
-      headers: corsHeaders
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 });
