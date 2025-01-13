@@ -1,6 +1,6 @@
-import { receiptStyles } from './styles';
-import { RESTAURANT_INFO } from './config';
-import { calculateTotals, formatDate, calculateServingTime } from './utils';
+import { receiptStyles } from './styles.ts';
+import { RESTAURANT_INFO } from './config.ts';
+import { calculateTotals, formatDate, calculateServingTime } from './utils.ts';
 
 interface OrderItem {
   quantity: number;
