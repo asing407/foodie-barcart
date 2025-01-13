@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2 } from "lucide-react";
+import { OrderConfirmation } from "./OrderConfirmation";
 
 interface OrderDetailsProps {
   order_items: (OrderItem & { menu_item: MenuItem })[];
@@ -89,15 +90,49 @@ export const OrderDetails = ({ order_items, status_updates, orderId }: OrderDeta
     }
   };
 
+  const handleOrderReceived = async () => {
+    try {
+      const { error } = await supabase
+        .from('status_updates')
+        .insert({
+          order_id: orderId,
+          status: 'received',
+          notes: 'Order received by customer',
+          payment_status: latestStatus?.payment_status
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Order status updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update order status.",
+      });
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       {latestStatus?.payment_status === 'success' && (
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            Payment successful! Your order will be served at your table soon.
-          </AlertDescription>
-        </Alert>
+        <>
+          <Alert className="bg-green-50 border-green-200">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              Payment successful! Your order will be served at your table soon.
+            </AlertDescription>
+          </Alert>
+
+          <OrderConfirmation 
+            orderId={orderId}
+            itemCount={order_items.reduce((sum, item) => sum + item.quantity, 0)}
+            onOrderReceived={handleOrderReceived}
+          />
+        </>
       )}
 
       <div className="space-y-2">
