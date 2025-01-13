@@ -47,71 +47,114 @@ serve(async (req) => {
         })
       }
 
-      // Handle both checkout.session.completed and payment_intent.succeeded events
-      if (event.type === 'checkout.session.completed' || event.type === 'payment_intent.succeeded') {
-        const session = event.data.object;
-        console.log('Processing completed payment:', session.id);
-        console.log('Order ID from metadata:', session.metadata?.order_id);
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
 
-        if (!session.metadata?.order_id) {
-          console.error('No order ID found in session metadata');
-          return new Response('No order ID found in session metadata', { 
-            status: 400,
-            headers: corsHeaders
-          });
-        }
+      // Handle different types of events
+      switch (event.type) {
+        case 'checkout.session.completed':
+        case 'payment_intent.succeeded':
+          console.log(`Processing successful payment event: ${event.type}`);
+          const session = event.data.object;
+          
+          if (!session.metadata?.order_id) {
+            console.error('No order ID found in session metadata');
+            return new Response('No order ID found in session metadata', { 
+              status: 400,
+              headers: corsHeaders
+            });
+          }
 
-        const supabase = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        );
+          // Check if payment was already processed
+          const { data: existingStatus } = await supabase
+            .from('status_updates')
+            .select('*')
+            .eq('order_id', session.metadata.order_id)
+            .eq('payment_status', 'success')
+            .single();
 
-        // First check if we already processed this payment
-        const { data: existingStatus } = await supabase
-          .from('status_updates')
-          .select('*')
-          .eq('order_id', session.metadata.order_id)
-          .eq('payment_status', 'success')
-          .single();
+          if (existingStatus) {
+            console.log('Payment already marked as successful for order:', session.metadata.order_id);
+            return new Response(JSON.stringify({ received: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
 
-        if (existingStatus) {
-          console.log('Payment already marked as successful for order:', session.metadata.order_id);
-          return new Response(JSON.stringify({ received: true }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+          // Update payment status
+          const { error: statusError } = await supabase
+            .from('status_updates')
+            .insert({
+              order_id: session.metadata.order_id,
+              status: 'confirmed',
+              payment_status: 'success',
+              notes: `Payment confirmed via Stripe. Session ID: ${session.id}`
+            });
 
-        console.log('Updating payment status for order:', session.metadata.order_id);
+          if (statusError) {
+            console.error('Error updating order status:', statusError);
+            throw statusError;
+          }
 
-        // Insert new status update with success payment status
-        const { error: statusError } = await supabase
-          .from('status_updates')
-          .insert({
-            order_id: session.metadata.order_id,
-            status: 'confirmed',
-            payment_status: 'success',
-            notes: `Payment confirmed via Stripe. Session ID: ${session.id}`
-          });
+          // Update order status
+          const { error: orderError } = await supabase
+            .from('orders')
+            .update({ status: 'confirmed' })
+            .eq('id', session.metadata.order_id);
 
-        if (statusError) {
-          console.error('Error updating order status:', statusError);
-          throw statusError;
-        }
+          if (orderError) {
+            console.error('Error updating order:', orderError);
+            throw orderError;
+          }
 
-        console.log('Successfully updated payment status for order:', session.metadata.order_id);
+          console.log('Successfully processed payment for order:', session.metadata.order_id);
+          break;
 
-        // Update the order status itself
-        const { error: orderError } = await supabase
-          .from('orders')
-          .update({ status: 'confirmed' })
-          .eq('id', session.metadata.order_id);
+        case 'payment_intent.payment_failed':
+          console.log('Payment failed:', event.data.object);
+          const failedSession = event.data.object;
+          
+          if (failedSession.metadata?.order_id) {
+            const { error: failureError } = await supabase
+              .from('status_updates')
+              .insert({
+                order_id: failedSession.metadata.order_id,
+                status: 'payment_failed',
+                payment_status: 'failed',
+                notes: `Payment failed. Reason: ${failedSession.last_payment_error?.message || 'Unknown error'}`
+              });
 
-        if (orderError) {
-          console.error('Error updating order:', orderError);
-          throw orderError;
-        }
+            if (failureError) {
+              console.error('Error updating failed payment status:', failureError);
+              throw failureError;
+            }
+          }
+          break;
 
-        console.log('Successfully processed payment for order:', session.metadata.order_id);
+        case 'checkout.session.expired':
+          console.log('Checkout session expired:', event.data.object);
+          const expiredSession = event.data.object;
+          
+          if (expiredSession.metadata?.order_id) {
+            const { error: expiryError } = await supabase
+              .from('status_updates')
+              .insert({
+                order_id: expiredSession.metadata.order_id,
+                status: 'expired',
+                payment_status: 'failed',
+                notes: 'Checkout session expired'
+              });
+
+            if (expiryError) {
+              console.error('Error updating expired session status:', expiryError);
+              throw expiryError;
+            }
+          }
+          break;
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
       }
 
       return new Response(JSON.stringify({ received: true }), {
