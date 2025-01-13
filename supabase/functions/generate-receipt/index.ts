@@ -54,7 +54,8 @@ serve(async (req) => {
         status_updates (
           status,
           payment_status,
-          created_at
+          created_at,
+          notes
         )
       `)
       .eq('id', orderId)
@@ -69,6 +70,14 @@ serve(async (req) => {
     }
 
     const latestStatus = order.status_updates[order.status_updates.length - 1];
+    const orderCreatedAt = new Date(order.created_at);
+    
+    // Find the "received" status update to calculate serving time
+    const receivedStatus = order.status_updates.find(update => update.status === 'received');
+    const servingTime = receivedStatus 
+      ? Math.round((new Date(receivedStatus.created_at).getTime() - orderCreatedAt.getTime()) / 1000 / 60)
+      : null;
+
     const subtotal = order.total_amount;
     const tax = subtotal * RESTAURANT_INFO.taxRate;
     const serviceCharge = subtotal * RESTAURANT_INFO.serviceCharge;
@@ -140,6 +149,13 @@ serve(async (req) => {
               background-color: ${latestStatus.payment_status === 'success' ? '#f0fff4' : '#fff5f5'};
               border-radius: 8px;
             }
+            .order-info {
+              margin-top: 30px;
+              text-align: center;
+              padding: 20px;
+              background-color: #f7f7f7;
+              border-radius: 8px;
+            }
             .footer {
               margin-top: 40px;
               text-align: center;
@@ -196,6 +212,16 @@ serve(async (req) => {
               <span class="total-label">Total:</span>
               <span>$${total.toFixed(2)}</span>
             </div>
+          </div>
+
+          <div class="order-info">
+            <h3>Order Details</h3>
+            ${servingTime !== null 
+              ? `<p>Order was served in ${servingTime} minutes</p>`
+              : '<p>Order serving time not available</p>'
+            }
+            <p>Order Status: ${latestStatus.status}</p>
+            ${latestStatus.notes ? `<p>Feedback: ${latestStatus.notes}</p>` : ''}
           </div>
 
           <div class="payment-info">
